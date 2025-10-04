@@ -1,11 +1,14 @@
-# Use the official lightweight Redis image
-FROM redis:7-alpine
+# Minimal Redis image without docker-compose
+FROM alpine:3.20
 
-# Expose port 6379 for external access
+# Install redis
+RUN apk add --no-cache redis
+
+# Small entrypoint to wire env vars into a config file
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Default Redis port
 EXPOSE 6379
 
-# Optional: Copy a custom redis.conf if you want to configure Redis
-# COPY redis.conf /usr/local/etc/redis/redis.conf
-
-# Run Redis server (default conf works if you don't need custom config)
-CMD ["redis-server", "--bind", "0.0.0.0", "--port", "6379"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
