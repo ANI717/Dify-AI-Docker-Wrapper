@@ -1,0 +1,2 @@
+# Dify-Docker-Wrapper
+This repo creates a single docker file that can be run with docker build over https://github.com/langgenius/dify repo. The Docker file combines everything from https://github.com/langgenius/dify/blob/main/docker/generate_docker_compose . The user cannot run docker compose, that is why this repo is created.
