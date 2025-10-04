@@ -1,6 +1,6 @@
 ```bash
-docker build -t dify-sandbox-image:local .
-docker run --name dify-sandbox -p 8194:8194 --env-file .env dify-sandbox-image:local
+docker build -t dify-ai-sandbox-image:local .
+docker run --name dify-ai-sandbox -p 8194:8194 --env-file .env dify-ai-sandbox-image:local
 ```
 
 ```python
