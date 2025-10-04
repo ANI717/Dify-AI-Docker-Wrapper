@@ -1,6 +1,6 @@
 ```bash
-docker build -t dify-postgres-image:local .
-docker run --name dify-postgres -p 5432:5432 --env-file .env dify-postgres-image:local
+docker build -t postgres-image:local .
+docker run --name postgres-container -p 5432:5432 --env-file .env postgres-image:local
 ```
 
 ```python
