@@ -1,7 +1,8 @@
-Create a single-container Docker setup for Dify API (use the latest official image).
-Do not use Docker Compose. Only Docker Build and Docker Run are allowed.
-Map the API on port 8080 and expose the port to 5001.
-There should be health check route at 5001/health.
+Create a single-container Docker setup for Dify API (use the official difyai/dify-api image).
+Do not use Docker Compose. Only docker build and docker run are allowed.
+
+Requirements:
+Expose the API on port 8080.
 The container must treat /temp as the only writable directory (assume everything else may be read-only).
 Load environment variables from a local .env file via --env-file.
 Provide a Dockerfile and the exact build/run commands.
