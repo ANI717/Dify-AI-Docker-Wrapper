@@ -11,6 +11,7 @@ Use these defaults (overridable by .env):
 REDIS_URL=redis://host.docker.internal:6379/0
 DATABASE_URL=postgresql://dify:dify@localhost:5432/dify
 QDRANT_URL=http://host.docker.internal:6334
+SANDBOX_SERVICE_URL=http://host.docker.internal:8194
 PORT=8080
 
 Ensure all temp/cache/uploads/logs paths resolve under /temp (e.g., set TMPDIR=/temp, and any storage/log paths to /temp/...).
