@@ -1,18 +1,17 @@
-Create a single-container Docker setup for Dify API (use the official langgenius/dify-api image).
+Create a single-container Docker setup for Dify Worker (use the official langgenius/dify-api image).
 Do not use Docker Compose. Only docker build and docker run are allowed.
 
 Requirements:
-Expose the API on port 8080.
 The container must treat /temp as the only writable directory (assume everything else may be read-only).
 Load environment variables from a local .env file via --env-file.
 Provide a Dockerfile and the exact build/run commands.
+There should be a route available for health check (don't do health check internally in the Dockerfile).
 
 Use these defaults (overridable by .env):
 REDIS_URL=redis://host.docker.internal:6379/0
 DATABASE_URL=postgresql://dify:dify@localhost:5432/dify
 QDRANT_URL=http://host.docker.internal:6334
 SANDBOX_SERVICE_URL=http://host.docker.internal:8194
-PORT=8080
 
 Ensure all temp/cache/uploads/logs paths resolve under /temp (e.g., set TMPDIR=/temp, and any storage/log paths to /temp/...).
 Create /temp with correct permissions and avoid root if possible.
