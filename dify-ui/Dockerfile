@@ -1,4 +1,4 @@
-FROM langgenius/dify-web:latest
+FROM langgenius/dify-web:1.9.1
 
 # Become root just to prepare /temp, then drop back to the image's non-root user.
 USER root
