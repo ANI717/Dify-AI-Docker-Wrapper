@@ -38,3 +38,6 @@ USER ${APP_UID}:${APP_GID}
 
 # Document the in-container port (host mapping set at `docker run`)
 EXPOSE 8080
+
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
