@@ -1,0 +1,71 @@
+TASK: Generate a single-container Docker setup that builds and runs the **Dify Console UI** from source (no Docker Hub images, no docker-compose). Output must include:
+1) A production-ready Dockerfile (two-stage build).
+2) A sample `.env` file.
+3) Exact `docker build` and `docker run` commands.
+
+HARD REQUIREMENTS
+- Source: `git clone` the official repo and checkout a specific **tag** (ARG `DIFY_TAG`, default `v0.6.15`). Do not use a floating branch.
+- Base image: Node.js 20 on Alpine.
+- Package manager: install **pnpm** globally with npm (do NOT rely on Corepack) to avoid signature issues.
+- Build must succeed in CI/containers: set `NODE_ENV=production` and `HUSKY=0` in the **builder** stage so Husky hooks don’t run.
+- Use BuildKit cache mount for pnpm store during install.
+- Install deps with `pnpm fetch --frozen-lockfile && pnpm install --offline`.
+- Build the Next.js UI and then `pnpm prune --prod` to keep only prod deps in the runtime.
+- Runtime must run as a **non-root** user (uid/gid 10001), with **/temp as the ONLY writable path**. Everything else should be readable only.
+- Set env defaults in the Dockerfile (overridable via `--env-file .env`) exactly as below.
+- Expose and serve on **port 8080** using `next start`.
+- Do **not** add a Dockerfile HEALTHCHECK (Kubernetes/ops will handle probes).
+- Output must show the exact `docker build` and `docker run` commands that:
+  - load env from `.env` using `--env-file .env`
+  - publish `8080:8080`
+  - mount nothing extra
+- Keep the Dockerfile minimal and reproducible (pin Node minor version, pin pnpm version, pin source tag).
+
+ENV DEFAULTS (set in Dockerfile but overridable via .env)
+REDIS_URL=redis://host.docker.internal:6379/0
+DATABASE_URL=postgresql://dify:dify@localhost:5432/dify
+QDRANT_URL=http://host.docker.internal:6334
+SANDBOX_SERVICE_URL=http://host.docker.internal:8194
+APP_API_URL=http://host.docker.internal:5001
+CONSOLE_API_URL=http://host.docker.internal:5001
+PORT=8080
+# Make all temp/cache/home under /temp:
+TMPDIR=/temp
+XDG_CACHE_HOME=/temp/.cache
+HOME=/temp
+
+EXPECTED OUTPUT FORMAT
+1) Dockerfile (complete, ready to build):
+   - Two stages: builder, runtime
+   - Builder:
+     - `FROM node:20.14-alpine AS builder`
+     - `apk add --no-cache git python3 make g++ libc6-compat`
+     - `npm i -g pnpm@10.16.0`
+     - `ARG DIFY_TAG=v0.6.15`
+     - `git clone --depth 1 --branch ${DIFY_TAG} https://github.com/langgenius/dify.git /src/dify`
+     - `WORKDIR /src/dify/web`
+     - `ENV NODE_ENV=production HUSKY=0`
+     - `RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store/v3 pnpm fetch --frozen-lockfile && pnpm install --offline`
+     - `RUN pnpm build && pnpm prune --prod`
+   - Runtime:
+     - `FROM node:20.14-alpine AS runtime`
+     - Create user/group 10001 and `/temp` owned by that user
+     - `WORKDIR /opt/app`
+     - Copy only: `.next`, `node_modules`, `public`, `package.json`
+     - Set the env defaults listed above
+     - `EXPOSE 8080`
+     - `USER 10001:10001`
+     - `CMD ["node","node_modules/next/dist/bin/next","start","-p","8080","-H","0.0.0.0"]`
+
+2) `.env` example with the same variables and values as above (user can override).
+
+3) Exact commands:
+   - Build: `DOCKER_BUILDKIT=1 docker build -t dify-ui:local --build-arg DIFY_TAG=v0.6.15 .`
+   - Run: `docker run --rm -p 8080:8080 --env-file .env --read-only --name dify-ui dify-ui:local`
+
+NOTES
+- Do NOT include docker-compose.
+- Do NOT use Corepack.
+- Do NOT add healthcheck lines in the Dockerfile.
+- Ensure the image works with `--read-only` (only `/temp` is writable).
+- Keep the answer concise: just the Dockerfile, the `.env`, then the two commands.
