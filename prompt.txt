@@ -1,4 +1,4 @@
-Create a single-container Docker setup for Dify API (use the official langgenius/dify-api image).
+Create a single-container Docker setup for Dify <UI/API/Worker/Scheduler/Sandbox> (use the official langgenius/dify-<web/api> image).
 Do not use Docker Compose. Only docker build and docker run are allowed.
 
 Requirements:
@@ -12,6 +12,8 @@ REDIS_URL=redis://host.docker.internal:6379/0
 DATABASE_URL=postgresql://dify:dify@localhost:5432/dify
 QDRANT_URL=http://host.docker.internal:6334
 SANDBOX_SERVICE_URL=http://host.docker.internal:8194
+APP_API_URL=http://host.docker.internal:5001
+CONSOLE_API_URL=http://host.docker.internal:5001
 PORT=8080
 
 Ensure all temp/cache/uploads/logs paths resolve under /temp (e.g., set TMPDIR=/temp, and any storage/log paths to /temp/...).
