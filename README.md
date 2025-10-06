@@ -3,6 +3,7 @@ A Wrapper over Dify AI images to deploy them individually without using `docker-
 
 ## Components
 **UI (web)** – React/Next.js front-end for users to build, configure, and run AI apps.  
+
 **API** – Main backend: handles requests from the UI, stores data, manages apps, calls models, pushes async tasks.  
 **Worker** – Background job runner (Celery) that executes long-running tasks from the API’s queue.  
 **Scheduler** – Optional cron-like job pusher that enqueues scheduled/periodic tasks into Redis.  
