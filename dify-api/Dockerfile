@@ -5,7 +5,7 @@ FROM langgenius/dify-api:1.9.1
 RUN mkdir -p /temp && chmod 777 /temp
 ENV TMPDIR=/temp \
     DIFY_BIND_ADDRESS=0.0.0.0 \
-    DIFY_PORT=5001
+    DIFY_PORT=8080
 
 WORKDIR /app/api
 # Keep upstream ENTRYPOINT/CMD; ROLE is chosen by MODE (api|worker|beat).

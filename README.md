@@ -8,6 +8,7 @@ UI (web) --HTTP--> API
 API --HTTP--> Sandbox
 API --SQL/TCP--> Postgres
 API --HTTP--> Vector Store (Weaviate/Milvus/Qdrant/PGVector)
+API --HTTP-->  Plugin Daemon (optional component)
 
 Worker --HTTP--> Sandbox
 Worker --SQL/TCP--> Postgres
