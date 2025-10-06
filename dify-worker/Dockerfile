@@ -1,26 +1,30 @@
 # syntax=docker/dockerfile:1
-ARG DIFY_TAG=1.9.1
-FROM langgenius/dify-api:${DIFY_TAG}
+FROM langgenius/dify-api:1.9.1
 
-# curl for HEALTHCHECK (tiny, reliable)
+# For HEALTHCHECK
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
   && rm -rf /var/lib/apt/lists/*
 
-# Put health server + launcher in the image
+# Writable temp + app helpers
 RUN mkdir -p /opt/health /opt/worker /temp && chmod 777 /temp
+
+# Copy your helper files (keep paths as-is)
 COPY health_server.py /opt/health/health_server.py
 COPY start-worker.sh  /opt/worker/start-worker.sh
-RUN chmod +x /opt/worker/start-worker.sh
 
-# Defaults (you can override via .env / docker run)
+# Normalize CRLF -> LF and ensure exec bit (fixes '/usr/bin/env: bash\r')
+RUN sed -i 's/\r$//' /opt/worker/start-worker.sh /opt/health/health_server.py \
+  && chmod +x /opt/worker/start-worker.sh
+
+# Sensible defaults; override via --env-file
 ENV TMPDIR=/temp \
-    HEALTH_PORT=5002
+    HEALTH_PORT=8080
 
-# Dify code lives here; your script runs "celery -A app.celery ..."
+# Dify app lives here
 WORKDIR /app/api
 
-# Health HTTP endpoint (mapped in README as host:5002 -> container:5002)
-EXPOSE 5002
+# Health endpoint port
+EXPOSE 8080
 
-# Start the health server + Celery worker
+# Start health server + Celery worker (your script should do both)
 ENTRYPOINT ["/opt/worker/start-worker.sh"]
