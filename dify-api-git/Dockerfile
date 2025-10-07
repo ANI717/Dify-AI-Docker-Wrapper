@@ -1,24 +1,26 @@
+FROM alpine/git AS git
+WORKDIR /src
+RUN git clone https://github.com/langgenius/dify.git .
+
 # base image
-FROM python:3.12-slim-bookworm AS base
+FROM python:3.11-slim AS base
+
+# copy the cloned repo from the git stage
+COPY --from=git /src/api /app/api
 
 WORKDIR /app/api
 
 # Install uv
 ENV UV_VERSION=0.8.9
-
 RUN pip install --no-cache-dir uv==${UV_VERSION}
 
-
 FROM base AS packages
-
-# if you located in China, you can use aliyun mirror to speed up
-# RUN sed -i 's@deb.debian.org@mirrors.aliyun.com@g' /etc/apt/sources.list.d/debian.sources
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc g++ libc-dev libffi-dev libgmp-dev libmpfr-dev libmpc-dev
 
-# Install Python dependencies
-COPY pyproject.toml uv.lock ./
+# Copy dependency files from the git stage instead of build context
+COPY --from=git /src/api/pyproject.toml /src/api/uv.lock ./
 RUN uv sync --locked --no-dev
 
 # production stage
@@ -51,7 +53,7 @@ RUN \
         # basic environment
         curl nodejs libgmp-dev libmpfr-dev libmpc-dev \
         # For Security
-        expat libldap-2.5-0 perl libsqlite3-0 zlib1g \
+        expat libldap2 perl libsqlite3-0 zlib1g \
         # install fonts to support the use of tools like pypdfium2
         fonts-noto-cjk \
         # install a package to improve the accuracy of guessing mime type and file extension
@@ -71,13 +73,11 @@ RUN python -c "import nltk; nltk.download('punkt'); nltk.download('averaged_perc
 
 ENV TIKTOKEN_CACHE_DIR=/app/api/.tiktoken_cache
 
-RUN python -c "import tiktoken; tiktoken.encoding_for_model('gpt2')"
+# Note: tiktoken files will be downloaded at runtime when needed
+# RUN python -c "import tiktoken; tiktoken.encoding_for_model('gpt2')"
 
-# Copy source code
-COPY . /app/api/
-
-# Copy entrypoint
-COPY docker/entrypoint.sh /entrypoint.sh
+# Copy entrypoint from git stage
+COPY --from=git /src/api/docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ARG COMMIT_SHA
