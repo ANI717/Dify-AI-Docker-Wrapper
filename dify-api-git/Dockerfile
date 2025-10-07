@@ -1,4 +1,4 @@
-FROM alpine/git AS git
+FROM alpine/git:v2.49.1 AS git
 WORKDIR /src
 RUN git clone https://github.com/langgenius/dify.git .
 
