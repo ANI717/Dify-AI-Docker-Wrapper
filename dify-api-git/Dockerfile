@@ -1,4 +1,7 @@
-FROM alpine/git:v2.49.1 AS git
+FROM python:3.12-slim AS fetch
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 RUN git clone https://github.com/langgenius/dify.git .
 
@@ -6,7 +9,7 @@ RUN git clone https://github.com/langgenius/dify.git .
 FROM python:3.11-slim AS base
 
 # copy the cloned repo from the git stage
-COPY --from=git /src/api /app/api
+COPY --from=fetch /src/api /app/api
 
 WORKDIR /app/api
 
@@ -19,8 +22,8 @@ FROM base AS packages
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc g++ libc-dev libffi-dev libgmp-dev libmpfr-dev libmpc-dev
 
-# Copy dependency files from the git stage instead of build context
-COPY --from=git /src/api/pyproject.toml /src/api/uv.lock ./
+# Copy dependency files from the fetch stage instead of build context
+COPY --from=fetch /src/api/pyproject.toml /src/api/uv.lock ./
 RUN uv sync --locked --no-dev
 
 # production stage
@@ -76,8 +79,8 @@ ENV TIKTOKEN_CACHE_DIR=/app/api/.tiktoken_cache
 # Note: tiktoken files will be downloaded at runtime when needed
 # RUN python -c "import tiktoken; tiktoken.encoding_for_model('gpt2')"
 
-# Copy entrypoint from git stage
-COPY --from=git /src/api/docker/entrypoint.sh /entrypoint.sh
+# Copy entrypoint from fetch stage
+COPY --from=fetch /src/api/docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ARG COMMIT_SHA
