@@ -32,6 +32,24 @@ ENV CONSOLE_WEB_URL=http://127.0.0.1:3000
 ENV SERVICE_API_URL=http://127.0.0.1:5001
 ENV APP_WEB_URL=http://127.0.0.1:3000
 
+# Force all temp/caches/logs to /temp
+RUN mkdir -p /temp && chmod 1777 /temp
+ENV TMPDIR=/temp \
+    XDG_CACHE_HOME=/temp/.cache \
+    PIP_CACHE_DIR=/temp/pip \
+    UV_CACHE_DIR=/temp/uv \
+    NLTK_DATA=/temp/nltk_data \
+    HUGGINGFACE_HUB_CACHE=/temp/hf \
+    HF_HOME=/temp/hf \
+    TRANSFORMERS_CACHE=/temp/transformers \
+    MPLCONFIGDIR=/temp/mpl \
+    PYTHONPYCACHEPREFIX=/temp/__pycache__ \
+    TIKTOKEN_CACHE_DIR=/temp/tiktoken \
+    SQLALCHEMY_DATABASE_URI=sqlite:////temp/app.db \
+    FLASK_INSTANCE_PATH=/temp/flask-instance \
+    UVICORN_WORKERS=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
 EXPOSE 5001
 
 # set timezone
@@ -76,9 +94,19 @@ RUN python -c "import tiktoken; tiktoken.encoding_for_model('gpt2')"
 # Copy source code
 COPY . /app/api/
 
+# Create non-root user
+RUN groupadd --gid 1001 appuser \
+    && useradd --uid 1001 --gid appuser --shell /bin/bash --create-home appuser
+
 # Copy entrypoint
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+# Change ownership of app directory to appuser
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
 
 ARG COMMIT_SHA
 ENV COMMIT_SHA=${COMMIT_SHA}
