@@ -1,5 +1,5 @@
 # base image
-FROM python:3.12-slim-bullseye AS base
+FROM python:3.11-slim-bullseye AS base
 
 WORKDIR /app/api
 
