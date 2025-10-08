@@ -1,14 +1,5 @@
-# git clone repo
-FROM python:3.12-slim-bookworm AS fetch
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends git ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-WORKDIR /src
-RUN git clone https://github.com/langgenius/dify.git .
-
 # base image
-FROM python:3.12-slim-bookworm AS base
-COPY --from=fetch /src/api /app/api
+FROM python:3.12-slim-bullseye AS base
 
 WORKDIR /app/api
 
@@ -27,7 +18,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc g++ libc-dev libffi-dev libgmp-dev libmpfr-dev libmpc-dev
 
 # Install Python dependencies
-COPY --from=fetch /src/api/pyproject.toml /src/api/uv.lock ./
+COPY api/pyproject.toml api/uv.lock ./
 RUN uv sync --locked --no-dev
 
 # production stage
@@ -60,7 +51,7 @@ RUN \
         # basic environment
         curl nodejs libgmp-dev libmpfr-dev libmpc-dev \
         # For Security
-        expat libldap-2.5-0 perl libsqlite3-0 zlib1g \
+        expat libldap-2.4-2 libldap2-dev perl libsqlite3-0 zlib1g \
         # install fonts to support the use of tools like pypdfium2
         fonts-noto-cjk \
         # install a package to improve the accuracy of guessing mime type and file extension
@@ -86,7 +77,7 @@ RUN python -c "import tiktoken; tiktoken.encoding_for_model('gpt2')"
 COPY . /app/api/
 
 # Copy entrypoint
-COPY --from=fetch /src/api/docker/entrypoint.sh /entrypoint.sh
+COPY api/docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ARG COMMIT_SHA
